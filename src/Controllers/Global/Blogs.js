@@ -77,23 +77,24 @@ export const updateBlogSec = async (req, res) => {
     }
 
     // 2. Handle Dynamic File Uploads in Parallel
-    if (req.files && req.files.length > 0) {
-      // Create an array of upload promises
-      const uploadPromises = req.files.map(async (file) => {
-        const match = file.fieldname.match(/^blog_img_(\d+)$/);
-        if (match) {
-          const index = parseInt(match[1]);
-          if (blogList[index]) {
-            const upload = await uploadOnCloudinary(file.path);
-            if (upload) {
-              blogList[index].image = upload.secure_url;
-            }
-          }
+  // Inside updateBlogSec controller
+if (req.files && req.files.length > 0) {
+  const uploadPromises = req.files.map(async (file) => {
+    const match = file.fieldname.match(/^blog_img_(\d+)$/);
+    if (match) {
+      const index = parseInt(match[1]);
+      
+      // IMPORTANT: Check if the blog object exists at this index before uploading
+      if (blogList[index]) {
+        const upload = await uploadOnCloudinary(file.path);
+        if (upload) {
+          blogList[index].image = upload.secure_url;
         }
-      });
+      }
+    }
+  });
+  await Promise.all(uploadPromises);
 
-      // Execute all uploads at the same time
-      await Promise.all(uploadPromises);
     }
 
     // 3. Update Database

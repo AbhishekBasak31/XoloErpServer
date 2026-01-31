@@ -72,13 +72,14 @@ export const updateBlogSec = async (req, res) => {
       try {
         blogList = JSON.parse(req.body.blogs);
       } catch (e) {
-        return res.status(400).json({ message: "Invalid blog data format" });
+        return res.status(400).json({ success: false, message: "Invalid blog data format" });
       }
     }
 
-    // 2. Handle Dynamic File Uploads
+    // 2. Handle Dynamic File Uploads in Parallel
     if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
+      // Create an array of upload promises
+      const uploadPromises = req.files.map(async (file) => {
         const match = file.fieldname.match(/^blog_img_(\d+)$/);
         if (match) {
           const index = parseInt(match[1]);
@@ -89,17 +90,26 @@ export const updateBlogSec = async (req, res) => {
             }
           }
         }
-      }
+      });
+
+      // Execute all uploads at the same time
+      await Promise.all(uploadPromises);
     }
 
+    // 3. Update Database
     const updatedSec = await BlogSec.findOneAndUpdate(
       {},
       { $set: { htext, dtext, blogs: blogList } },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    return res.status(200).json({ success: true, message: "Updated Successfully", data: updatedSec });
+    return res.status(200).json({ 
+      success: true, 
+      message: "Updated Successfully", 
+      data: updatedSec 
+    });
   } catch (err) {
+    console.error("Update Error:", err); // Log the actual error to Render console
     return res.status(500).json({ success: false, message: err.message });
   }
 };

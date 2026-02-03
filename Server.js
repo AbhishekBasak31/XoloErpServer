@@ -17,7 +17,7 @@ import FooterRouter from "./src/Routers/Global/Footer.js";
 import ContactRouter from "./src/Routers/Global/Contact.js";
 import EnquiryRouter from "./src/Routers/Global/Enquiry.js";
 import ContactDetailsRouter from "./src/Routers/Global/ContactDetails.js";
-import AboutPageRouter from "./src/Routers/AboutPage/AboutPage.js";
+
 import HomeBannerRouter from "./src/Routers/Homepage/Banner.js";
 import HomeAboutRouter from "./src/Routers/Homepage/About.js";
 import QuickLinkRouter from "./src/Routers/Global/QuickLinks.js";
@@ -30,10 +30,8 @@ import FeatureSecRouter from "./src/Routers/Homepage/Features.js";
 
 import ReviewSectionRouter from "./src/Routers/Homepage/ReviewSec.js";
 import WhyChooseUsRouter from "./src/Routers/Homepage/WhyChooseUs.js";
-import GallerySecRouter from "./src/Routers/Homepage/GallerySec.js";
 import ServiceSecRouter from "./src/Routers/Homepage/Service.js";
 import PackageRouter from "./src/Routers/Global/Package.js";
-import ServicePageRouter from "./src/Routers/ServicePage/ServicePage.js";
 import HomeDashRouter from "./src/Routers/Homepage/Dashboards.js";
 import FocusSecRouter from "./src/Routers/Homepage/Focus.js";
 import StatisticSecRouter from "./src/Routers/Homepage/Statistic.js";
@@ -44,6 +42,11 @@ import IndustrialSecRouter from "./src/Routers/Global/Industrial.js";
 import FaqSecRouter from "./src/Routers/Global/Faq.js";
 import BlogSecRouter from "./src/Routers/Global/Blogs.js";
 
+import AboutPagerouter from "./src/Routers/AboutPage/AboutPage.js";
+import WhyChooseUsPageRouter from "./src/Routers/AboutPage/WhyChooseUs.js";
+import AskXoloPageRouter from "./src/Routers/AboutPage/AskXolo.js";
+import RefundPolicyRouter from "./src/Routers/Refund/Refund.js";
+import TermsRouter from "./src/Routers/TermsandCondition/TermsandCondition.js";
 
 
 
@@ -161,11 +164,7 @@ app.use("/api/v1/footer", FooterRouter);
 app.use("/api/v1/social", SocialRouter);
 app.use("/api/v1/contactdetail", ContactDetailsRouter);
 app.use("/api/v1/reviewsec", ReviewSectionRouter);
-app.use("/api/v1/news", NewsRouter);
-app.use("/api/v1/newsec",NewsSecRouter);
 app.use("/api/v1/package",PackageRouter);
-
-
 app.use("/api/v1/quicklink", QuickLinkRouter);
 app.use("/api/v1/event", EventRouter);
 
@@ -174,10 +173,9 @@ app.use("/api/v1/home/banner", HomeBannerRouter);
 app.use("/api/v1/home/about", HomeAboutRouter);
 app.use("/api/v1/home/featuresec", FeatureSecRouter);
 app.use("/api/v1/home/wcu", WhyChooseUsRouter);
-app.use("/api/v1/home/gallery",GallerySecRouter);
+
 app.use("/api/v1/home/servicesec",ServiceSecRouter);
 app.use("/api/v1/home/dashboard",HomeDashRouter);
-app.use("/api/v1/home/focus",FocusSecRouter);
 app.use("/api/v1/home/focus",FocusSecRouter);
 app.use("/api/v1/home/statistic", StatisticSecRouter);
 app.use("/api/v1/home/workflow", HowitWorkSecRouter);
@@ -187,18 +185,21 @@ app.use("/api/v1/industrial", IndustrialSecRouter);
 app.use("/api/v1/faq", FaqSecRouter);
 app.use("/api/v1/blogs", BlogSecRouter);
 
-app.use("/api/v1/packages", PackageRouter);
-
 // About page
-app.use("/api/v1/aboutpage", AboutPageRouter);
-//ServicePage
-app.use("/api/v1/servicepage", ServicePageRouter);
+app.use("/api/v1/aboutpage", AboutPagerouter);
+app.use("/api/v1/about/whychooseus", WhyChooseUsPageRouter);
+app.use("/api/v1/about/askxolo", AskXoloPageRouter);
+app.use("/api/v1/refundpolicy", RefundPolicyRouter);
+app.use("/api/v1/terms", TermsRouter);
+
+//Feature page
+// app.use("/api/v1/featurepage", AboutPageRouter);
 
 
-// Gallery page
 
-//Eventpage
-app.use("/api/v1/eventsec", EventSecRouter);
+//
+
+
 
 
 /* -------------------------------------------------------

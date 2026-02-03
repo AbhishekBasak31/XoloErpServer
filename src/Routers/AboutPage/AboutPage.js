@@ -1,42 +1,33 @@
 import express from "express";
-import {
-  createAboutPage,
-  getAboutPage,
-  updateAboutPage,
-  deleteAboutPage,
-} from "../../Controllers/AboutPage/AboutPage.js";
 import { upload } from "../../Middleware/Multer.js";
+import { 
+  getAboutPage, 
+  createAboutPage, 
+  updateAboutPage,
+  deleteAboutPage
+} from "../../Controllers/AboutPage/AboutPage.js";
 import { authenticate } from "../../Middleware/AuthMiddlewares.js";
 
-const AboutPageRouter = express.Router();
+const AboutPagerouter = express.Router();
 
-// Define Image Fields for Multer
-// NOTE: For dynamic team images (TeamImg_0, TeamImg_1...), we generally use upload.any() or define a large max count
-// But to be precise, we can list them if we have a max limit, or use a loop.
-// Here I'll use a mix of known fields and a generous limit for team fields.
-
-const explicitFields = [
-  { name: "BannerImg1", maxCount: 1 },
-  { name: "BannerImg2", maxCount: 1 },
-  { name: "BannerImg3", maxCount: 1 },
-  { name: "OurVisionVideo", maxCount: 1 },
-  { name: "OurvisionBp1Icon", maxCount: 1 },
-  { name: "OurvisionBp2Icon", maxCount: 1 },
-  { name: "Card1CounterIcon", maxCount: 1 },
-  { name: "Card2CounterIcon", maxCount: 1 },
-  { name: "Card3CounterIcon", maxCount: 1 },
+// Define Upload Fields
+const uploadFields = [
+  // Single Images
+  { name: "OurStoryImg", maxCount: 1 },
+  { name: "OurMissionImg", maxCount: 1 },
+  { name: "OurVisionImg", maxCount: 1 },
 ];
 
-// Add Team fields (assuming max 20 members for safety)
-for(let i=0; i<20; i++) {
-    explicitFields.push({ name: `TeamImg_${i}`, maxCount: 1 });
+// Add dynamic fields for Team (up to 20 members) and Cards (up to 10 cards)
+for (let i = 0; i < 20; i++) {
+  uploadFields.push({ name: `TeamImg_${i}`, maxCount: 1 });
 }
 
-const aboutUploads = upload.fields(explicitFields);
+const aboutPageUploads = upload.fields(uploadFields);
 
-AboutPageRouter.get("/", getAboutPage);
-AboutPageRouter.post("/",authenticate, aboutUploads, createAboutPage);
-AboutPageRouter.patch("/",authenticate, aboutUploads, updateAboutPage);
-AboutPageRouter.delete("/",authenticate, deleteAboutPage);
+AboutPagerouter.get("/", getAboutPage);
+AboutPagerouter.post("/", authenticate, aboutPageUploads, createAboutPage);
+AboutPagerouter.patch("/:id", authenticate, aboutPageUploads, updateAboutPage);
+AboutPagerouter.delete("/:id", authenticate, deleteAboutPage);
 
-export default AboutPageRouter;
+export default AboutPagerouter;

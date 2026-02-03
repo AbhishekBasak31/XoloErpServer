@@ -1,235 +1,142 @@
-import mongoose from "mongoose";
-import { AboutPage } from "../../Models/AboutPage/AboutPage.js"; 
-import uploadOnCloudinary from "../../Utils/Clodinary.js"; 
+import { AboutXolopage } from "../../Models/AboutPage/AboutPage.js";
+import uploadOnCloudinary from "../../Utils/Clodinary.js";
 
-const norm = (v) => (typeof v === "string" ? v.trim() : v);
-
-/**
- * HELPER: Upload file if exists
- */
-const uploadFile = async (files, key) => {
-  if (files && files[key] && files[key][0]) {
-    const upload = await uploadOnCloudinary(files[key][0].path);
-    return upload?.secure_url || upload?.url;
-  }
-  return null;
-};
-
-/**
- * CREATE AboutPage
- */
-export const createAboutPage = async (req, res) => {
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
-
-    const existing = await AboutPage.findOne().session(session);
-    if (existing) {
-        await session.abortTransaction();
-        return res.status(400).json({ success: false, message: "AboutPage already exists. Use update." });
-    }
-
-    const files = req.files || {};
-    const body = req.body;
-
-    // 1. Text Fields from Schema
-    const textFields = [
-      "MainHtext", "MainDtext", "SinceYear",
-      "BannerImg1AltTag", "BannerImg2AltTag", "BannerImg3AltTag",
-      "underBannerLeftsidetext", "underBannerRightsidetext",
-      "OurVisionVideoAltTag", "OurvisionTag", "OurvisionHtext",
-      "OurvisionBp1Htext", "OurvisionBp2Htext", "OurvisionBp1Dtext", "OurvisionBp2Dtext",
-      "OurvisionNote", "CountersectionHtext",
-      "Card1Counter", "Card1CounterHText", "Card1CounterText",
-      "Card2Counter", "Card2CounterHText", "Card2CounterText",
-      "Card3Counter", "Card3CounterHText", "Card3CounterText",
-      "TeamTag", "Teamhtext",
-      "CTAHtext", "CTADtext", "CTAButtontext", "CTAButtonUrl"
-    ];
-
-    // 2. Image/Video Fields from Schema
-    const imageFields = [
-      "BannerImg1", "BannerImg2", "BannerImg3",
-      "OurVisionVideo", // Video
-      "OurvisionBp1Icon", "OurvisionBp2Icon",
-      "Card1CounterIcon", "Card2CounterIcon", "Card3CounterIcon"
-    ];
-
-    // 3. Team Member Logic (Array of Objects)
-    // We expect team data to come as a JSON string for the array or indexed fields if form-data
-    // Here assuming JSON string for complex array or manual parsing if using indexed keys
-    let teamMembers = [];
-    if (body.TeamMember) {
-        try {
-            teamMembers = JSON.parse(body.TeamMember);
-        } catch (e) {
-            console.error("Team parsing error", e);
-        }
-    }
-
-    // 4. Upload Global Images
-    const uploads = {};
-    for (const imgKey of imageFields) {
-      const url = await uploadFile(files, imgKey);
-      if (url) uploads[imgKey] = url;
-    }
-
-    // 5. Handle Team Images (If uploaded separately as TeamImg_0, TeamImg_1 etc)
-    if (teamMembers.length > 0) {
-        for (let i = 0; i < teamMembers.length; i++) {
-            const teamFileKey = `TeamImg_${i}`; // Frontend must send this key
-            const url = await uploadFile(files, teamFileKey);
-            if (url) {
-                teamMembers[i].Img = url;
-            } else if (!teamMembers[i].Img) {
-                 // If no new file and no existing string, maybe handle error or allow empty
-            }
-        }
-    }
-
-    // 6. Build Document
-    const docData = { ...uploads, TeamMember: teamMembers };
-    textFields.forEach(f => { 
-        if(body[f] !== undefined) docData[f] = norm(body[f]); 
-    });
-
-    const newDoc = new AboutPage(docData);
-    await newDoc.save({ session });
-    await session.commitTransaction();
-
-    return res.status(201).json({ success: true, message: "AboutPage created", data: newDoc });
-
-  } catch (err) {
-    if (session.inTransaction()) await session.abortTransaction();
-    console.error(err);
-    return res.status(500).json({ success: false, message: err.message });
-  } finally {
-    session.endSession();
-  }
-};
-
-/**
- * GET ALL
- */
+/* ================= GET ================= */
 export const getAboutPage = async (req, res) => {
   try {
-    const data = await AboutPage.findOne();
+    const data = await AboutXolopage.findOne();
     return res.status(200).json({ success: true, data: data });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-/**
- * UPDATE AboutPage
- */
-export const updateAboutPage = async (req, res) => {
-  const session = await mongoose.startSession();
+/* ================= CREATE ================= */
+export const createAboutPage = async (req, res) => {
   try {
-    session.startTransaction();
-
-    const target = await AboutPage.findOne().session(session);
-
-    if (!target) {
-      await session.abortTransaction();
-      return res.status(404).json({ success: false, message: "No document found" });
+    const existing = await AboutXolopage.findOne();
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Page data already exists. Use Update." });
     }
 
-    const updates = {};
-    const body = req.body || {};
+    const body = req.body;
     const files = req.files || {};
 
-    // 1. Text Fields
-    const textFields = [
-      "MainHtext", "MainDtext", "SinceYear",
-      "BannerImg1AltTag", "BannerImg2AltTag", "BannerImg3AltTag",
-      "underBannerLeftsidetext", "underBannerRightsidetext",
-      "OurVisionVideoAltTag", "OurvisionTag", "OurvisionHtext",
-      "OurvisionBp1Htext", "OurvisionBp2Htext", "OurvisionBp1Dtext", "OurvisionBp2Dtext",
-      "OurvisionNote", "CountersectionHtext",
-      "Card1Counter", "Card1CounterHText", "Card1CounterText",
-      "Card2Counter", "Card2CounterHText", "Card2CounterText",
-      "Card3Counter", "Card3CounterHText", "Card3CounterText",
-      "TeamTag", "Teamhtext",
-      "CTAHtext", "CTADtext", "CTAButtontext", "CTAButtonUrl"
-    ];
+    // 1. Handle Single Images
+    const singleImageFields = ["OurStoryImg", "OurMissionImg", "OurVisionImg"];
+    for (const field of singleImageFields) {
+      if (files[field] && files[field][0]) {
+        const upload = await uploadOnCloudinary(files[field][0].path);
+        if (upload) body[field] = upload.secure_url;
+      }
+    }
 
-    textFields.forEach(field => {
-        if (body[field] !== undefined) {
-            updates[field] = norm(body[field]);
+    // 2. Handle Team Members (Array)
+    let teamMembers = [];
+    if (body.OurTeam) {
+      try {
+        teamMembers = JSON.parse(body.OurTeam);
+        // Loop through parsed team to check for uploaded images
+        for (let i = 0; i < teamMembers.length; i++) {
+          const key = `TeamImg_${i}`;
+          if (files[key] && files[key][0]) {
+            const upload = await uploadOnCloudinary(files[key][0].path);
+            if (upload) teamMembers[i].Img = upload.secure_url;
+          }
         }
-    });
-
-    // 2. Image Fields
-    const imageFields = [
-      "BannerImg1", "BannerImg2", "BannerImg3",
-      "OurVisionVideo",
-      "OurvisionBp1Icon", "OurvisionBp2Icon",
-      "Card1CounterIcon", "Card2CounterIcon", "Card3CounterIcon"
-    ];
-
-    for (const field of imageFields) {
-        const url = await uploadFile(files, field);
-        if (url) updates[field] = url;
+        body.OurTeam = teamMembers;
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid OurTeam JSON format" });
+      }
     }
 
-    // 3. Team Member Logic (Parsing & Updating)
-    if (body.TeamMember) {
-        try {
-            const parsedTeam = JSON.parse(body.TeamMember);
-            // Handle image updates for team members
-            for (let i = 0; i < parsedTeam.length; i++) {
-                const teamFileKey = `TeamImg_${i}`;
-                const url = await uploadFile(files, teamFileKey);
-                if (url) {
-                    parsedTeam[i].Img = url; // Update with new URL
-                }
-                // If no new URL, keep the one passed in the JSON (which should be the old URL)
-            }
-            updates.TeamMember = parsedTeam;
-        } catch (e) {
-            console.error("Team update parse error", e);
-        }
+    // 3. Handle Why Choose Us Cards (Array) - Text Only
+    let cards = [];
+    if (body.whytochosecards) {
+      try {
+        cards = JSON.parse(body.whytochosecards);
+        body.whytochosecards = cards;
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid whytochosecards JSON format" });
+      }
     }
 
-    if (Object.keys(updates).length === 0) {
-       await session.abortTransaction();
-       return res.status(400).json({ success: false, message: "No changes provided" });
-    }
-
-    const updatedDoc = await AboutPage.findByIdAndUpdate(target._id, { $set: updates }, { new: true, session });
-
-    await session.commitTransaction();
-    return res.status(200).json({ success: true, message: "Updated successfully", data: updatedDoc });
+    const newPage = new AboutXolopage(body);
+    await newPage.save();
+    return res.status(201).json({ success: true, message: "About Page Created", data: newPage });
 
   } catch (err) {
-    if (session.inTransaction()) await session.abortTransaction();
     return res.status(500).json({ success: false, message: err.message });
-  } finally {
-    session.endSession();
   }
 };
 
-/**
- * DELETE
- */
-export const deleteAboutPage = async (req, res) => {
-    const session = await mongoose.startSession();
-    try {
-        session.startTransaction();
-        const target = await AboutPage.findOne().session(session);
-        
-        if(!target) {
-            await session.abortTransaction();
-            return res.status(404).json({success:false, message: "Not found"});
-        }
-        await AboutPage.findByIdAndDelete(target._id, {session});
-        await session.commitTransaction();
-        return res.status(200).json({success:true, message:"Deleted"});
-    } catch(err){
-        if(session.inTransaction()) await session.abortTransaction();
-        return res.status(500).json({success:false, message: err.message});
-    } finally {
-        session.endSession();
+/* ================= UPDATE ================= */
+export const updateAboutPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+    const files = req.files || {};
+
+    // 1. Handle Single Images
+    const singleImageFields = ["OurStoryImg", "OurMissionImg", "OurVisionImg"];
+    for (const field of singleImageFields) {
+      if (files[field] && files[field][0]) {
+        const upload = await uploadOnCloudinary(files[field][0].path);
+        if (upload) body[field] = upload.secure_url;
+      }
     }
+
+    // 2. Handle Team Members (Array)
+    if (body.OurTeam) {
+      try {
+        const teamMembers = JSON.parse(body.OurTeam);
+        for (let i = 0; i < teamMembers.length; i++) {
+          const key = `TeamImg_${i}`;
+          // If a new file is uploaded, replace the Img URL
+          if (files[key] && files[key][0]) {
+            const upload = await uploadOnCloudinary(files[key][0].path);
+            if (upload) teamMembers[i].Img = upload.secure_url;
+          }
+          // If no new file, teamMembers[i].Img remains the old URL passed in JSON
+        }
+        body.OurTeam = teamMembers;
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid OurTeam JSON format" });
+      }
+    }
+
+    // 3. Handle Why Choose Us Cards (Array) - Text Only
+    if (body.whytochosecards) {
+      try {
+        const cards = JSON.parse(body.whytochosecards);
+        body.whytochosecards = cards;
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid whytochosecards JSON format" });
+      }
+    }
+
+    const updatedPage = await AboutXolopage.findByIdAndUpdate(id, { $set: body }, { new: true });
+    
+    if (!updatedPage) {
+      return res.status(404).json({ success: false, message: "About Page not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "About Page Updated", data: updatedPage });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/* ================= DELETE ================= */
+export const deleteAboutPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedPage = await AboutXolopage.findByIdAndDelete(id);
+    if (!deletedPage) {
+      return res.status(404).json({ success: false, message: "About Page not found" });
+    }
+    return res.status(200).json({ success: true, message: "About Page Deleted Successfully" });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
 };

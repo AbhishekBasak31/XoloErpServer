@@ -10,11 +10,26 @@ const FeatureSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  Img: { 
+  points:[{
+    type: String,
+    required: true
+  }],
+  cardsizeImg: { 
     type: String ,
     required: true 
-
-  }
+  },
+    cardsizeImgAltText: { 
+    type: String ,
+    required: true 
+  },
+  largesizeImg: { 
+    type: String ,
+    required: true 
+  },
+    largesizeImgAltText: { 
+    type: String ,
+    required: true 
+  },
 });
 const FeatureSecSchema = new SCHEMA(
   {

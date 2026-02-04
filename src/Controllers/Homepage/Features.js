@@ -1,96 +1,72 @@
-import { FeatureSec } from "../../Models/HomePage/Features.js"; // Adjust path
-import  uploadOnCloudinary  from "../../Utils/Clodinary.js"; 
+import { FeatureSec } from "../../Models/HomePage/Features.js";
+import uploadOnCloudinary from "../../Utils/Clodinary.js";
 
-/* ================= GET ================= */
 export const getFeatureSec = async (req, res) => {
-  try {
-    const data = await FeatureSec.findOne();
-    return res.status(200).json({ success: true, data: data });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
+    try {
+        const data = await FeatureSec.findOne();
+        return res.status(200).json({ success: true, data: data });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
 };
 
-/* ================= CREATE ================= */
+const handleUploads = async (featuresList, files) => {
+    for (let i = 0; i < featuresList.length; i++) {
+        // Handle Card Size Image
+        const cardField = `cardsizeImg_${i}`;
+        if (files[cardField] && files[cardField][0]) {
+            const upload = await uploadOnCloudinary(files[cardField][0].path);
+            if (upload) featuresList[i].cardsizeImg = upload.secure_url;
+        }
+
+        // Handle Large Size Image
+        const largeField = `largesizeImg_${i}`;
+        if (files[largeField] && files[largeField][0]) {
+            const upload = await uploadOnCloudinary(files[largeField][0].path);
+            if (upload) featuresList[i].largesizeImg = upload.secure_url;
+        }
+    }
+    return featuresList;
+};
+
 export const createFeatureSec = async (req, res) => {
-  try {
-    const existing = await FeatureSec.findOne();
-    if (existing) {
-      return res.status(400).json({ success: false, message: "Section already exists. Use Update." });
-    }
+    try {
+        const existing = await FeatureSec.findOne();
+        if (existing) return res.status(400).json({ success: false, message: "Use Update." });
 
-    const { Htext, Dtext } = req.body;
-    let featuresList = [];
+        const { Htext, Dtext } = req.body;
+        let featuresList = JSON.parse(req.body.Features || "[]");
 
-    // 1. Parse Features JSON from request body
-    if (req.body.Features) {
-        try {
-            featuresList = JSON.parse(req.body.Features);
-        } catch (e) {
-            return res.status(400).json({ message: "Invalid Features JSON format." });
+        if (req.files) {
+            featuresList = await handleUploads(featuresList, req.files);
         }
+
+        const newSec = new FeatureSec({ Htext, Dtext, Features: featuresList });
+        await newSec.save();
+        return res.status(201).json({ success: true, data: newSec });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
-
-    // 2. Handle Image Uploads (img_0, img_1, etc.)
-    if (req.files) {
-        for (let i = 0; i < featuresList.length; i++) {
-            const fieldName = `img_${i}`;
-            if (req.files[fieldName] && req.files[fieldName][0]) {
-                const upload = await uploadOnCloudinary(req.files[fieldName][0].path);
-                if (upload) {
-                    featuresList[i].Img = upload.secure_url;
-                }
-            }
-        }
-    }
-
-    const newSec = new FeatureSec({ Htext, Dtext, Features: featuresList });
-    await newSec.save();
-
-    return res.status(201).json({ success: true, message: "Feature Section Created", data: newSec });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
 };
 
-/* ================= UPDATE ================= */
 export const updateFeatureSec = async (req, res) => {
-  try {
-    const { Htext, Dtext } = req.body;
-    let featuresList = [];
+    try {
+        const { Htext, Dtext } = req.body;
+        let featuresList = JSON.parse(req.body.Features || "[]");
 
-    // 1. Parse Features JSON
-    if (req.body.Features) {
-        try {
-            featuresList = JSON.parse(req.body.Features);
-        } catch (e) {
-            return res.status(400).json({ message: "Invalid Features JSON format." });
+        if (req.files) {
+            featuresList = await handleUploads(featuresList, req.files);
         }
+
+        const updatedSec = await FeatureSec.findOneAndUpdate(
+            {},
+            { $set: { Htext, Dtext, Features: featuresList } },
+            { new: true, upsert: true }
+        );
+        return res.status(200).json({ success: true, data: updatedSec });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
-
-    // 2. Handle Image Uploads and update URLs
-    if (req.files) {
-        for (let i = 0; i < featuresList.length; i++) {
-            const fieldName = `img_${i}`;
-            if (req.files[fieldName] && req.files[fieldName][0]) {
-                const upload = await uploadOnCloudinary(req.files[fieldName][0].path);
-                if (upload) {
-                    featuresList[i].Img = upload.secure_url;
-                }
-            }
-        }
-    }
-
-    const updatedSec = await FeatureSec.findOneAndUpdate(
-      {}, 
-      { $set: { Htext, Dtext, Features: featuresList } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-
-    return res.status(200).json({ success: true, message: "Feature Section Updated", data: updatedSec });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
 };
 
 /* ================= DELETE ================= */

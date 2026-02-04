@@ -39,8 +39,11 @@ export const createHomeAbout = async (req, res) => {
       "tab1Name", "tab2Name", "tab3Name",
       "tab1Desc", "tab2Desc", "tab3Desc",
       "tab1Bp1", "tab1Bp2", "tab1Bp3",
+      "tab1imgAltText",
       "tab2Bp1", "tab2Bp2", "tab2Bp3",
+      "tab2imgAltText",
       "tab3Bp1", "tab3Bp2", "tab3Bp3",
+      "tab3imgAltText",
       "CTAbuttonname", "CTAbuttonUrl"
     ];
 
@@ -134,8 +137,11 @@ export const updateHomeAbout = async (req, res) => {
       "tab1Name", "tab2Name", "tab3Name",
       "tab1Desc", "tab2Desc", "tab3Desc",
       "tab1Bp1", "tab1Bp2", "tab1Bp3",
+      "tab1imgAltText",
       "tab2Bp1", "tab2Bp2", "tab2Bp3",
+      "tab2imgAltText",
       "tab3Bp1", "tab3Bp2", "tab3Bp3",
+      "tab3imgAltText",
       "CTAbuttonname", "CTAbuttonUrl"
     ];
 

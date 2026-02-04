@@ -5,7 +5,9 @@ import { SCHEMA } from "../../Utils/Constant.js";
 const MemberSchema = new SCHEMA({
   Name: { type: String, required: true },
   Desig: { type: String, required: true },
-  Img: { type: String, required: true }
+  Img: { type: String, required: true },
+  Linkdin: { type: String, required: true },
+
 });
 
 // --- Sub-Schema for "Why Xolo is Best" cards ---

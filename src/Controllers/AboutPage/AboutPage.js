@@ -1,6 +1,14 @@
 import { AboutXolopage } from "../../Models/AboutPage/AboutPage.js";
 import uploadOnCloudinary from "../../Utils/Clodinary.js";
 
+// Helper to handle file retrieval from Multer (works with .fields or .any)
+const getFile = (files, fieldName) => {
+  if (Array.isArray(files)) {
+    return files.find(f => f.fieldname === fieldName);
+  }
+  return files && files[fieldName] ? files[fieldName][0] : null;
+};
+
 /* ================= GET ================= */
 export const getAboutPage = async (req, res) => {
   try {
@@ -20,27 +28,27 @@ export const createAboutPage = async (req, res) => {
     }
 
     const body = req.body;
-    const files = req.files || {};
+    const files = req.files || [];
 
     // 1. Handle Single Images
     const singleImageFields = ["OurStoryImg", "OurMissionImg", "OurVisionImg"];
     for (const field of singleImageFields) {
-      if (files[field] && files[field][0]) {
-        const upload = await uploadOnCloudinary(files[field][0].path);
+      const file = getFile(files, field);
+      if (file) {
+        const upload = await uploadOnCloudinary(file.path);
         if (upload) body[field] = upload.secure_url;
       }
     }
 
     // 2. Handle Team Members (Array)
-    let teamMembers = [];
     if (body.OurTeam) {
       try {
-        teamMembers = JSON.parse(body.OurTeam);
-        // Loop through parsed team to check for uploaded images
+        const teamMembers = JSON.parse(body.OurTeam);
         for (let i = 0; i < teamMembers.length; i++) {
           const key = `TeamImg_${i}`;
-          if (files[key] && files[key][0]) {
-            const upload = await uploadOnCloudinary(files[key][0].path);
+          const file = getFile(files, key);
+          if (file) {
+            const upload = await uploadOnCloudinary(file.path);
             if (upload) teamMembers[i].Img = upload.secure_url;
           }
         }
@@ -50,12 +58,10 @@ export const createAboutPage = async (req, res) => {
       }
     }
 
-    // 3. Handle Why Choose Us Cards (Array) - Text Only
-    let cards = [];
+    // 3. Handle Why Choose Us Cards
     if (body.whytochosecards) {
       try {
-        cards = JSON.parse(body.whytochosecards);
-        body.whytochosecards = cards;
+        body.whytochosecards = JSON.parse(body.whytochosecards);
       } catch (e) {
         return res.status(400).json({ message: "Invalid whytochosecards JSON format" });
       }
@@ -75,29 +81,29 @@ export const updateAboutPage = async (req, res) => {
   try {
     const { id } = req.params;
     const body = req.body;
-    const files = req.files || {};
+    const files = req.files || [];
 
     // 1. Handle Single Images
     const singleImageFields = ["OurStoryImg", "OurMissionImg", "OurVisionImg"];
     for (const field of singleImageFields) {
-      if (files[field] && files[field][0]) {
-        const upload = await uploadOnCloudinary(files[field][0].path);
+      const file = getFile(files, field);
+      if (file) {
+        const upload = await uploadOnCloudinary(file.path);
         if (upload) body[field] = upload.secure_url;
       }
     }
 
-    // 2. Handle Team Members (Array)
+    // 2. Handle Team Members
     if (body.OurTeam) {
       try {
         const teamMembers = JSON.parse(body.OurTeam);
         for (let i = 0; i < teamMembers.length; i++) {
           const key = `TeamImg_${i}`;
-          // If a new file is uploaded, replace the Img URL
-          if (files[key] && files[key][0]) {
-            const upload = await uploadOnCloudinary(files[key][0].path);
+          const file = getFile(files, key);
+          if (file) {
+            const upload = await uploadOnCloudinary(file.path);
             if (upload) teamMembers[i].Img = upload.secure_url;
           }
-          // If no new file, teamMembers[i].Img remains the old URL passed in JSON
         }
         body.OurTeam = teamMembers;
       } catch (e) {
@@ -105,11 +111,10 @@ export const updateAboutPage = async (req, res) => {
       }
     }
 
-    // 3. Handle Why Choose Us Cards (Array) - Text Only
+    // 3. Handle Cards
     if (body.whytochosecards) {
       try {
-        const cards = JSON.parse(body.whytochosecards);
-        body.whytochosecards = cards;
+        body.whytochosecards = JSON.parse(body.whytochosecards);
       } catch (e) {
         return res.status(400).json({ message: "Invalid whytochosecards JSON format" });
       }

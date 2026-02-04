@@ -14,7 +14,10 @@ const FeatureSecRouter = express.Router();
 // Middleware to handle dynamically indexed image uploads (e.g., img_0, img_1, ...)
 // Supporting up to 20 feature cards.
 const featureUploads = upload.fields(
-  Array.from({ length: 20 }, (_, i) => ({ name: `img_${i}`, maxCount: 1 }))
+    Array.from({ length: 20 }, (_, i) => [
+        { name: `cardsizeImg_${i}`, maxCount: 1 },
+        { name: `largesizeImg_${i}`, maxCount: 1 }
+    ]).flat()
 );
 
 FeatureSecRouter.get("/", getFeatureSec);

@@ -55,7 +55,10 @@ const HomeAboutSchema = new SCHEMA(
      type: String,
       required: true,
   },
-
+  tab1imgAltText:{
+    type: String,
+      required: true,
+  },
    tab2Desc:{
     type: String,
       required: true,
@@ -76,6 +79,11 @@ const HomeAboutSchema = new SCHEMA(
      type: String,
       required: true,
   },
+  tab2imgAltText:{
+    type: String,
+      required: true,
+  },
+
    tab3Desc:{
     type: String,
       required: true,
@@ -93,6 +101,10 @@ const HomeAboutSchema = new SCHEMA(
       required: true,
    },
   tab3img:{
+     type: String,
+      required: true,
+  },
+    tab3imgAltText:{
      type: String,
       required: true,
   },

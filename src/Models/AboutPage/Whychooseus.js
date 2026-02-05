@@ -29,6 +29,8 @@ const WhyChooseUspageSchema = new SCHEMA({
 
   // Right Side Visuals
   RightsideImg: { type: String, required: true },
+  RightsideImgAltText: { type: String, required: true },
+
   Liveupdatenumber: { type: Number, required: true }, // For the +12.5% widget
 
   // Bottom Stats Section

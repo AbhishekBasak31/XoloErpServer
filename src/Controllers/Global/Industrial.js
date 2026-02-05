@@ -5,7 +5,7 @@ import uploadOnCloudinary from "../../Utils/Clodinary.js";
 export const getIndustrialSec = async (req, res) => {
   try {
     const data = await IndustrialSec.findOne();
-    return res.status(200).json({ success: true, data: data });
+    return res.status(200).json({ success: true, data });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -16,46 +16,53 @@ export const createIndustrialSec = async (req, res) => {
   try {
     const existing = await IndustrialSec.findOne();
     if (existing) {
-      return res.status(400).json({ success: false, message: "Section exists. Use Update." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Section exists. Use Update." });
     }
 
     const { htext, dtext } = req.body;
     let cardList = [];
 
-    // 1. Parse Card JSON
     if (req.body.card) {
-      try {
-        cardList = JSON.parse(req.body.card);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid card data format" });
-      }
+      cardList = JSON.parse(req.body.card);
     }
 
-    // 2. Handle Dynamic File Uploads (card_img_{index})
-    if (req.files && req.files.length > 0) {
+    // Upload images
+    if (req.files?.length) {
       for (const file of req.files) {
         const match = file.fieldname.match(/^card_img_(\d+)$/);
-        if (match) {
-          const index = parseInt(match[1]);
-          if (cardList[index]) {
-            const upload = await uploadOnCloudinary(file.path);
-            if (upload) {
-              cardList[index].img = upload.secure_url;
-            }
-          }
+        if (!match) continue;
+
+        const index = Number(match[1]);
+        if (!cardList[index]) continue;
+
+        const upload = await uploadOnCloudinary(file.path);
+        if (upload?.secure_url) {
+          cardList[index].img = upload.secure_url;
         }
       }
     }
 
+    // ✅ Ensure imgAltText exists
+    cardList = cardList.map((c) => ({
+      ...c,
+      imgAltText: c.imgAltText || c.htext || "Industrial card image",
+    }));
+
     const newSec = new IndustrialSec({
       htext,
       dtext,
-      card: cardList
+      card: cardList,
     });
 
     await newSec.save();
-    return res.status(201).json({ success: true, message: "Created Successfully", data: newSec });
 
+    return res.status(201).json({
+      success: true,
+      message: "Created Successfully",
+      data: newSec,
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -67,30 +74,31 @@ export const updateIndustrialSec = async (req, res) => {
     const { htext, dtext } = req.body;
     let cardList = [];
 
-    // 1. Parse Card JSON
     if (req.body.card) {
-      try {
-        cardList = JSON.parse(req.body.card);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid card data format" });
-      }
+      cardList = JSON.parse(req.body.card);
     }
 
-    // 2. Handle Dynamic File Uploads
-    if (req.files && req.files.length > 0) {
+    // Upload images (preserve existing)
+    if (req.files?.length) {
       for (const file of req.files) {
         const match = file.fieldname.match(/^card_img_(\d+)$/);
-        if (match) {
-          const index = parseInt(match[1]);
-          if (cardList[index]) {
-            const upload = await uploadOnCloudinary(file.path);
-            if (upload) {
-              cardList[index].img = upload.secure_url;
-            }
-          }
+        if (!match) continue;
+
+        const index = Number(match[1]);
+        if (!cardList[index]) continue;
+
+        const upload = await uploadOnCloudinary(file.path);
+        if (upload?.secure_url) {
+          cardList[index].img = upload.secure_url;
         }
       }
     }
+
+    // ✅ Ensure imgAltText exists
+    cardList = cardList.map((c) => ({
+      ...c,
+      imgAltText: c.imgAltText || c.htext || "Industrial card image",
+    }));
 
     const updatedSec = await IndustrialSec.findOneAndUpdate(
       {},
@@ -98,7 +106,11 @@ export const updateIndustrialSec = async (req, res) => {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    return res.status(200).json({ success: true, message: "Updated Successfully", data: updatedSec });
+    return res.status(200).json({
+      success: true,
+      message: "Updated Successfully",
+      data: updatedSec,
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -108,7 +120,9 @@ export const updateIndustrialSec = async (req, res) => {
 export const deleteIndustrialSec = async (req, res) => {
   try {
     await IndustrialSec.findOneAndDelete({});
-    return res.status(200).json({ success: true, message: "Deleted Successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Deleted Successfully" });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }

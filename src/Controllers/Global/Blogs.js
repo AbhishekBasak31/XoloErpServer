@@ -5,7 +5,7 @@ import uploadOnCloudinary from "../../Utils/Clodinary.js";
 export const getBlogSec = async (req, res) => {
   try {
     const data = await BlogSec.findOne();
-    return res.status(200).json({ success: true, data: data });
+    return res.status(200).json({ success: true, data });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -14,48 +14,54 @@ export const getBlogSec = async (req, res) => {
 /* ================= CREATE ================= */
 export const createBlogSec = async (req, res) => {
   try {
-    const existing = await BlogSec.findOne();
-    if (existing) {
-      return res.status(400).json({ success: false, message: "Section exists. Use Update." });
+    const exists = await BlogSec.findOne();
+    if (exists) {
+      return res.status(400).json({
+        success: false,
+        message: "Blog section already exists. Use update.",
+      });
     }
 
     const { htext, dtext } = req.body;
-    let blogList = [];
+    let blogs = [];
 
-    // 1. Parse Blog JSON
     if (req.body.blogs) {
-      try {
-        blogList = JSON.parse(req.body.blogs);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid blog data format" });
-      }
+      blogs = JSON.parse(req.body.blogs);
     }
 
-    // 2. Handle Dynamic File Uploads (blog_img_{index})
-    if (req.files && req.files.length > 0) {
+    // Upload images
+    if (req.files?.length) {
       for (const file of req.files) {
         const match = file.fieldname.match(/^blog_img_(\d+)$/);
-        if (match) {
-          const index = parseInt(match[1]);
-          if (blogList[index]) {
-            const upload = await uploadOnCloudinary(file.path);
-            if (upload) {
-              blogList[index].image = upload.secure_url;
-            }
-          }
+        if (!match) continue;
+
+        const index = Number(match[1]);
+        if (!blogs[index]) continue;
+
+        const upload = await uploadOnCloudinary(file.path);
+        if (upload?.secure_url) {
+          blogs[index].image = upload.secure_url;
         }
       }
     }
 
-    const newSec = new BlogSec({
+    // Ensure imageAltText
+    blogs = blogs.map((b) => ({
+      ...b,
+      imageAltText: b.imageAltText || b.title || "Blog image",
+    }));
+
+    const section = await BlogSec.create({
       htext,
       dtext,
-      blogs: blogList
+      blogs,
     });
 
-    await newSec.save();
-    return res.status(201).json({ success: true, message: "Created Successfully", data: newSec });
-
+    return res.status(201).json({
+      success: true,
+      message: "Blog section created successfully",
+      data: section,
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -65,52 +71,47 @@ export const createBlogSec = async (req, res) => {
 export const updateBlogSec = async (req, res) => {
   try {
     const { htext, dtext } = req.body;
-    let blogList = [];
+    let blogs = [];
 
-    // 1. Parse Blog JSON
     if (req.body.blogs) {
-      try {
-        blogList = JSON.parse(req.body.blogs);
-      } catch (e) {
-        return res.status(400).json({ success: false, message: "Invalid blog data format" });
-      }
+      blogs = JSON.parse(req.body.blogs);
     }
 
-    // 2. Handle Dynamic File Uploads in Parallel
-  // Inside updateBlogSec controller
-if (req.files && req.files.length > 0) {
-  const uploadPromises = req.files.map(async (file) => {
-    const match = file.fieldname.match(/^blog_img_(\d+)$/);
-    if (match) {
-      const index = parseInt(match[1]);
-      
-      // IMPORTANT: Check if the blog object exists at this index before uploading
-      if (blogList[index]) {
-        const upload = await uploadOnCloudinary(file.path);
-        if (upload) {
-          blogList[index].image = upload.secure_url;
-        }
-      }
-    }
-  });
-  await Promise.all(uploadPromises);
+    // Upload images (preserve existing)
+    if (req.files?.length) {
+      await Promise.all(
+        req.files.map(async (file) => {
+          const match = file.fieldname.match(/^blog_img_(\d+)$/);
+          if (!match) return;
 
+          const index = Number(match[1]);
+          if (!blogs[index]) return;
+
+          const upload = await uploadOnCloudinary(file.path);
+          if (upload?.secure_url) {
+            blogs[index].image = upload.secure_url;
+          }
+        })
+      );
     }
 
-    // 3. Update Database
-    const updatedSec = await BlogSec.findOneAndUpdate(
+    blogs = blogs.map((b) => ({
+      ...b,
+      imageAltText: b.imageAltText || b.title || "Blog image",
+    }));
+
+    const updated = await BlogSec.findOneAndUpdate(
       {},
-      { $set: { htext, dtext, blogs: blogList } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
+      { $set: { htext, dtext, blogs } },
+      { new: true, upsert: true }
     );
 
-    return res.status(200).json({ 
-      success: true, 
-      message: "Updated Successfully", 
-      data: updatedSec 
+    return res.status(200).json({
+      success: true,
+      message: "Blog section updated successfully",
+      data: updated,
     });
   } catch (err) {
-    console.error("Update Error:", err); // Log the actual error to Render console
     return res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -119,7 +120,10 @@ if (req.files && req.files.length > 0) {
 export const deleteBlogSec = async (req, res) => {
   try {
     await BlogSec.findOneAndDelete({});
-    return res.status(200).json({ success: true, message: "Deleted Successfully" });
+    return res.status(200).json({
+      success: true,
+      message: "Blog section deleted successfully",
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }

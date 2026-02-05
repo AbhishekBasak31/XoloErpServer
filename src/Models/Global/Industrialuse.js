@@ -6,6 +6,10 @@ const CardsSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  imgAltText:{
+        type: String, 
+    required: true
+  },
   htext:{
     type: String, 
     required: true 

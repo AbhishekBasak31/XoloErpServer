@@ -28,7 +28,11 @@ const BlogSchema = new mongoose.Schema({
   image: { 
     type: String, 
     required: true 
-  }
+  },
+  imageAltText:{
+        type: String, 
+    required: true
+  },
 });
 
 const BlogSecSchema = new SCHEMA(

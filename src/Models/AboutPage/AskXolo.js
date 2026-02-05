@@ -22,7 +22,11 @@ const PointSchema = new SCHEMA({
     type: String, 
     required: true 
   }, // Cloudinary/Unsplash URL
-  
+  imageAltText: { 
+    type: String, 
+    required: true 
+  },
+
   // Array of strings is better than individual bulletpoint fields
   points: [{ 
     type: String 

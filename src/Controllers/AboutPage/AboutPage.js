@@ -1,7 +1,6 @@
 import { AboutXolopage } from "../../Models/AboutPage/AboutPage.js";
 import uploadOnCloudinary from "../../Utils/Clodinary.js";
 
-// Helper to handle file retrieval from Multer (works with .fields or .any)
 const getFile = (files, fieldName) => {
   if (Array.isArray(files)) {
     return files.find(f => f.fieldname === fieldName);
@@ -9,7 +8,6 @@ const getFile = (files, fieldName) => {
   return files && files[fieldName] ? files[fieldName][0] : null;
 };
 
-/* ================= GET ================= */
 export const getAboutPage = async (req, res) => {
   try {
     const data = await AboutXolopage.findOne();
@@ -19,18 +17,14 @@ export const getAboutPage = async (req, res) => {
   }
 };
 
-/* ================= CREATE ================= */
 export const createAboutPage = async (req, res) => {
   try {
     const existing = await AboutXolopage.findOne();
-    if (existing) {
-      return res.status(400).json({ success: false, message: "Page data already exists. Use Update." });
-    }
+    if (existing) return res.status(400).json({ success: false, message: "Page data already exists." });
 
     const body = req.body;
     const files = req.files || [];
 
-    // 1. Handle Single Images
     const singleImageFields = ["OurStoryImg", "OurMissionImg", "OurVisionImg"];
     for (const field of singleImageFields) {
       const file = getFile(files, field);
@@ -40,50 +34,23 @@ export const createAboutPage = async (req, res) => {
       }
     }
 
-    // 2. Handle Team Members (Array)
-    if (body.OurTeam) {
-      try {
-        const teamMembers = JSON.parse(body.OurTeam);
-        for (let i = 0; i < teamMembers.length; i++) {
-          const key = `TeamImg_${i}`;
-          const file = getFile(files, key);
-          if (file) {
-            const upload = await uploadOnCloudinary(file.path);
-            if (upload) teamMembers[i].Img = upload.secure_url;
-          }
-        }
-        body.OurTeam = teamMembers;
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid OurTeam JSON format" });
-      }
-    }
-
-    // 3. Handle Why Choose Us Cards
-    if (body.whytochosecards) {
-      try {
-        body.whytochosecards = JSON.parse(body.whytochosecards);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid whytochosecards JSON format" });
-      }
-    }
+    if (body.OurTeam) body.OurTeam = JSON.parse(body.OurTeam);
+    if (body.whytochosecards) body.whytochosecards = JSON.parse(body.whytochosecards);
 
     const newPage = new AboutXolopage(body);
     await newPage.save();
-    return res.status(201).json({ success: true, message: "About Page Created", data: newPage });
-
+    return res.status(201).json({ success: true, data: newPage });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-/* ================= UPDATE ================= */
 export const updateAboutPage = async (req, res) => {
   try {
     const { id } = req.params;
     const body = req.body;
     const files = req.files || [];
 
-    // 1. Handle Single Images
     const singleImageFields = ["OurStoryImg", "OurMissionImg", "OurVisionImg"];
     for (const field of singleImageFields) {
       const file = getFile(files, field);
@@ -93,45 +60,26 @@ export const updateAboutPage = async (req, res) => {
       }
     }
 
-    // 2. Handle Team Members
     if (body.OurTeam) {
-      try {
-        const teamMembers = JSON.parse(body.OurTeam);
-        for (let i = 0; i < teamMembers.length; i++) {
-          const key = `TeamImg_${i}`;
-          const file = getFile(files, key);
-          if (file) {
-            const upload = await uploadOnCloudinary(file.path);
-            if (upload) teamMembers[i].Img = upload.secure_url;
-          }
+      const teamMembers = JSON.parse(body.OurTeam);
+      for (let i = 0; i < teamMembers.length; i++) {
+        const file = getFile(files, `TeamImg_${i}`);
+        if (file) {
+          const upload = await uploadOnCloudinary(file.path);
+          if (upload) teamMembers[i].Img = upload.secure_url;
         }
-        body.OurTeam = teamMembers;
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid OurTeam JSON format" });
       }
+      body.OurTeam = teamMembers;
     }
 
-    // 3. Handle Cards
-    if (body.whytochosecards) {
-      try {
-        body.whytochosecards = JSON.parse(body.whytochosecards);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid whytochosecards JSON format" });
-      }
-    }
+    if (body.whytochosecards) body.whytochosecards = JSON.parse(body.whytochosecards);
 
     const updatedPage = await AboutXolopage.findByIdAndUpdate(id, { $set: body }, { new: true });
-    
-    if (!updatedPage) {
-      return res.status(404).json({ success: false, message: "About Page not found" });
-    }
-
-    return res.status(200).json({ success: true, message: "About Page Updated", data: updatedPage });
+    return res.status(200).json({ success: true, data: updatedPage });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-
 /* ================= DELETE ================= */
 export const deleteAboutPage = async (req, res) => {
   try {

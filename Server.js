@@ -47,6 +47,8 @@ import WhyChooseUsPageRouter from "./src/Routers/AboutPage/WhyChooseUs.js";
 import AskXoloPageRouter from "./src/Routers/AboutPage/AskXolo.js";
 import RefundPolicyRouter from "./src/Routers/Refund/Refund.js";
 import TermsRouter from "./src/Routers/TermsandCondition/TermsandCondition.js";
+import MetaRouter from "./src/Routers/Global/meta.routes.js";
+import AffiliateRouter from "./src/Routers/Affiliationpage/Affiliationpage.js";
 
 
 
@@ -166,7 +168,7 @@ app.use("/api/v1/contactdetail", ContactDetailsRouter);
 app.use("/api/v1/reviewsec", ReviewSectionRouter);
 app.use("/api/v1/package",PackageRouter);
 app.use("/api/v1/quicklink", QuickLinkRouter);
-app.use("/api/v1/event", EventRouter);
+app.use("/api/v1/meta", MetaRouter);
 
 // Home page
 app.use("/api/v1/home/banner", HomeBannerRouter);
@@ -195,6 +197,7 @@ app.use("/api/v1/terms", TermsRouter);
 //Feature page
 // app.use("/api/v1/featurepage", AboutPageRouter);
 
+app.use("/api/v1/affiliate", AffiliateRouter);
 
 
 //

@@ -23,6 +23,7 @@ const AboutXolopageSchema = new SCHEMA({
   OurStoryHtext: { type: String, required: true }, // "The Evolution of Xolo ERP"
   OurStoryDtext: { type: String, required: true }, 
   OurStoryImg: { type: String, required: true },
+  OurStoryImgAltText: { type: String, required: true },
 
   // 2. Why Xolo Section (The Pinnace of Business Management)
   whytochooseHtext: { type: String, required: true },
@@ -33,11 +34,12 @@ const AboutXolopageSchema = new SCHEMA({
   OurMissionHtext: { type: String, required: true },
   OurMissionDtext: { type: String, required: true },
   OurMissionImg: { type: String, required: true }, // Image used in the Mission section
-
+  OurMissionImgAltText : { type: String, required: true }, 
   // 4. Vision Section
   OurVisionHtext: { type: String, required: true },
   OurVisionDtext: { type: String, required: true },
   OurVisionImg: { type: String, required: true }, // Image used in the Vision section
+  OurVisionImgAltText: { type: String, required: true },
 
   // 5. Team Section (Architects of Efficiency)
   OurTeamHtext: { type: String, required: true },

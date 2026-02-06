@@ -56,6 +56,7 @@ import AffiliateRouter from "./src/Routers/Affiliationpage/Affiliationpage.js";
 const app = express();
 const PORT = process.env.PORT || 7000;
 
+
 /* -------------------------------------------------------
    GET LOCAL NETWORK IP (for dev logging only)
 ------------------------------------------------------- */
@@ -104,7 +105,8 @@ const allowedOrigins = new Set([
   `http://${localIP}:5174`,
   `http://${localIP}:8080`,
   `http://${localIP}:8086`,
-  "https://fingertip.co.in", // ✅ PRODUCTION ORIGIN
+  "https://fingertip.co.in",
+  "https://xoloerp.com" // ✅ PRODUCTION ORIGIN
 ]);
 
 // Optional env-based origin (safe)
